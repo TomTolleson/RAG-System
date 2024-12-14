@@ -1,0 +1,6 @@
+langchain 
+pymilvus 
+openai
+langchain-community
+python-dotenv
+langchain-openai

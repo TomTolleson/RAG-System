@@ -1,0 +1,2 @@
+This is a test document about Milvus. Milvus is a highly scalable vector database built for AI applications.
+Milvus provides CRUD operations, scalar filtering, and supports both CPU and GPU implementations. It has a cloud-native architecture and integrates well with modern ML/AI workflows.

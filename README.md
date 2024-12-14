@@ -1,44 +1,145 @@
-wget https://github.com/milvus-io/milvus/releases/download/v2.4.12/milvus-standalone-docker-compose.yml -O docker-compose.yml
-sudo docker compose up -d
-```[6]
+# RAG System with Milvus and LangChain
 
-**Alternative: Package Manager Installation**
-For Ubuntu/Debian systems:
+![RAG System](./assets/RAG_System.png)
+![OPENAI](./assets/OPENAI.png)
+![MILVUS](./assets/MILVUS.png)
+![LANGCHAIN](./assets/LANGCHAIN.png)    
+
+
+A Retrieval-Augmented Generation (RAG) system that combines Milvus vector database with LangChain and OpenAI for intelligent document querying and response generation.
+
+## System Overview
+
+This system implements RAG architecture to provide accurate, context-aware responses to questions by:
+1. Storing document embeddings in Milvus vector database
+2. Retrieving relevant context when queried
+3. Generating human-like responses using OpenAI's language models
+
+### Components
+
+#### Vector Store (src/vector_store/milvus_store.py)
+- Uses Milvus for efficient vector similarity search
+- Stores document embeddings using OpenAI's embedding model
+- Handles document addition and retrieval operations
+- Configurable connection settings for Milvus database
+
+#### RAG Chain (src/rag/rag_chain.py)
+- Implements the core RAG logic
+- Integrates OpenAI's ChatGPT for response generation
+- Manages the retrieval-generation pipeline
+- Configurable temperature and other LLM parameters
+
+#### Document Processing (main.py)
+- Handles document loading and chunking
+- Configurable chunk size and overlap
+- Supports text documents (expandable to other formats)
+
+## Prerequisites
+
+- Python 3.12+
+- Docker and Docker Compose
+- OpenAI API key
+
+## Installation
+
+1. Clone the repository:
 ```bash
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:milvusdb/milvus
-sudo apt update
-sudo apt install milvus
-```[2]
+git clone [repository-url]
+cd RAG-System
+```
 
-## Verify Installation
-
-Check if Milvus is running properly:
+2. Create a virtual environment:
 ```bash
-sudo systemctl status milvus
-sudo systemctl status milvus-etcd
-sudo systemctl status milvus-minio
-```[2]
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
 
-## Learning Path
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-**Prerequisites**
-- Python programming knowledge
-- Basic Linux commands
-- Docker and Docker Compose familiarity[3]
+4. Set up environment variables:
+```bash
+# Create .env file with your OpenAI API key
+echo "OPENAI_API_KEY=your_key_here" > .env
+```
 
-**Key Concepts to Learn**
-- Vector database fundamentals
-- Collections and partitions
-- Indexing in Milvus
-- PyMilvus (Python SDK)
-- Role-based access control[3]
+5. Start Milvus services:
+```bash
+docker-compose up -d
+```
 
-**Getting Started with Development**
-1. Install the Python client:
-```python
-from pymilvus import MilvusClient
-client = MilvusClient("milvus_demo.db")
-```[4]
+## Usage
 
-For better management and visualization, you can also explore Attu, which is an open-source GUI tool for intuitive Milvus management[1].
+1. Add your documents to the data directory:
+```bash
+mkdir data
+echo "Your document content here" > data/test_document.txt
+```
+
+2. Run the system:
+```bash
+python main.py
+```
+
+## Configuration
+
+### Milvus Settings
+- Host: localhost (default)
+- Port: 19530 (default)
+- Configurable in src/config/settings.py
+
+### Document Processing
+- Chunk size: 1000 (default)
+- Chunk overlap: 0 (default)
+- Configurable in src/config/settings.py
+
+### LLM Settings
+- Model: OpenAI ChatGPT
+- Temperature: 0.2 (default)
+- Configurable in src/config/settings.py
+
+## Use Cases
+
+This RAG system is ideal for:
+- Document question-answering
+- Knowledge base augmentation
+- Contextual information retrieval
+- Research assistance
+- Technical documentation queries
+
+## Docker Services
+
+The system uses several Docker containers:
+- Milvus standalone server
+- Etcd for metadata storage
+- MinIO for object storage
+
+Access MinIO console:
+- URL: http://localhost:9015
+- Credentials: minioadmin/minioadmin
+
+## Extending the System
+
+The system can be extended with:
+- Additional document types (PDF, HTML, etc.)
+- Custom embedding models
+- Alternative vector databases
+- Web interface
+- Batch processing
+- Caching mechanisms
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests.
+
+## License
+
+[Your license information here]
+
+## References
+
+- [Milvus Documentation](https://milvus.io/docs)
+- [LangChain Documentation](https://python.langchain.com/docs/get_started/introduction)
+- [OpenAI API Documentation](https://platform.openai.com/docs/introduction)
