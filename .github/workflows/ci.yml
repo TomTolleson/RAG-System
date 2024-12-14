@@ -17,16 +17,17 @@ jobs:
       milvus:
         image: milvusdb/milvus:v2.4.12
         env:
-          ETCD_ENDPOINTS: localhost:2379
-          MINIO_ADDRESS: localhost:9000
+          ETCD_ENDPOINTS: etcd:2379
+          MINIO_ADDRESS: minio:9000
         ports:
           - 19530:19530
           - 9091:9091
         options: >-
-          --health-cmd "curl -f http://localhost:9091/healthz"
-          --health-interval 30s
-          --health-timeout 20s
-          --health-retries 3
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:9091/healthz || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 40s
       
       etcd:
         image: quay.io/coreos/etcd:v3.5.5
@@ -45,12 +46,13 @@ jobs:
           MINIO_SECRET_KEY: minioadmin
         ports:
           - 9000:9000
-          - 9001:9001
         options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 30s
-          --health-timeout 20s
-          --health-retries 3
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 20s
+        command: server /data
 
     steps:
     - uses: actions/checkout@v4
