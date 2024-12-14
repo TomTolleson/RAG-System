@@ -44,6 +44,7 @@ jobs:
         env:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
+          MINIO_CI_CD: "true"
         ports:
           - 9000:9000
         options: >-
@@ -52,7 +53,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --health-start-period 20s
-        command: server /data
+          --entrypoint "minio server /data"
 
     steps:
     - uses: actions/checkout@v4
