@@ -1,10 +1,8 @@
 # RAG System with Milvus and LangChain
 
-![RAG System](./assets/RAG_System.png)
-![OPENAI](./assets/OPENAI.png)
-![MILVUS](./assets/MILVUS.png)
-![LANGCHAIN](./assets/LANGCHAIN.png)    
 
+![OpenAI](https://a11ybadges.com/badge?logo=openai) 
+[![License: MIT](https://cdn.prod.website-files.com/5e0f1144930a8bc8aace526c/65dd9eb5aaca434fac4f1c34_License-MIT-blue.svg)](/LICENSE)
 
 A Retrieval-Augmented Generation (RAG) system that combines Milvus vector database with LangChain and OpenAI for intelligent document querying and response generation.
 
