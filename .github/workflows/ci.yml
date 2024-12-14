@@ -19,6 +19,7 @@ jobs:
         env:
           ETCD_ENDPOINTS: localhost:2379
           MINIO_ADDRESS: localhost:9000
+          STANDALONE: "true"
         ports:
           - 19530:19530
           - 9091:9091
@@ -29,13 +30,12 @@ jobs:
           --health-retries 3
       
       minio:
-        image: bitnami/minio:2024
+        image: quay.io/minio/minio:latest
         ports:
           - 9000:9000
         env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-          MINIO_DEFAULT_BUCKETS: "mybucket:public"
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
         options: >-
           --health-cmd "sleep 10"
           --health-interval 10s
