@@ -15,7 +15,7 @@ jobs:
 
     services:
       milvus:
-        image: milvusdb/milvus:v2.4.12-standalone@sha256:0c9a3a0d27d8b223f86c4c0f2f4aa4d3b3d0e8c7e3f5b2f4e4b4b4b4b4b4b4b
+        image: milvusdb/milvus:v2.4.12-standalone
         env:
           ETCD_ENDPOINTS: localhost:2379
           MINIO_ADDRESS: localhost:9000
@@ -29,7 +29,7 @@ jobs:
           --health-retries 3
       
       minio:
-        image: bitnami/minio:2024@sha256:1a9a98fad68227fbf9c64d66c6d4f0b6a6937568a8dff16f6267c6e8f850b8f5
+        image: bitnami/minio:2024
         ports:
           - 9000:9000
         env:
