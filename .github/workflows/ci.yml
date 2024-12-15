@@ -31,7 +31,7 @@ jobs:
         
     - name: Type check with mypy
       run: |
-        pip install mypy types-all
+        pip install mypy types-Flask
         mypy src/
         
     - name: Run tests with pytest
