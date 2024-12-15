@@ -1,8 +1,11 @@
 from typing import List, Optional
+
 from langchain_community.vectorstores import Milvus
-from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
-from ..config.settings import OPENAI_API_KEY, MILVUS_HOST, MILVUS_PORT
+from langchain_openai import OpenAIEmbeddings
+
+from ..config.settings import MILVUS_HOST, MILVUS_PORT, OPENAI_API_KEY
+
 
 class MilvusStore:
     def __init__(self) -> None:
@@ -20,4 +23,4 @@ class MilvusStore:
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:
         if self.vector_store is None:
             raise ValueError("No documents have been added to the vector store")
-        return self.vector_store.similarity_search(query, k=k) 
+        return self.vector_store.similarity_search(query, k=k)

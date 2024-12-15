@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import Mock
 
+
 @pytest.fixture
 def temp_document():
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
@@ -11,9 +12,11 @@ def temp_document():
     yield temp_path
     temp_path.unlink()  # Cleanup after test
 
+
 @pytest.fixture
 def mock_openai_key(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key-123")
+
 
 @pytest.fixture
 def mock_milvus(mocker):
@@ -22,6 +25,7 @@ def mock_milvus(mocker):
     mock_milvus = Mock()
     mocker.patch('langchain_community.vectorstores.milvus.Milvus.from_documents', return_value=mock_milvus)
     return mock_milvus
+
 
 @pytest.fixture
 def mock_openai(mocker):

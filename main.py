@@ -6,6 +6,7 @@ from langchain_community.document_loaders import TextLoader
 from src.config.settings import CHUNK_SIZE, CHUNK_OVERLAP
 from src.rag.rag_chain import RAGChain
 
+
 def load_documents(file_path):
     loader = TextLoader(file_path)
     documents = loader.load()
@@ -14,6 +15,7 @@ def load_documents(file_path):
         chunk_overlap=CHUNK_OVERLAP
     )
     return text_splitter.split_documents(documents)
+
 
 def main():
     # Initialize RAG chain
@@ -32,5 +34,7 @@ def main():
     result = rag_chain.query(question)
     print(result)
 
+
 if __name__ == "__main__":
     main()
+

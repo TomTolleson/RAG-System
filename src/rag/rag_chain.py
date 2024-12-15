@@ -1,8 +1,11 @@
 from typing import Optional
+
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
-from ..vector_store.milvus_store import MilvusStore
+
 from ..config.settings import OPENAI_API_KEY, TEMPERATURE
+from ..vector_store.milvus_store import MilvusStore
+
 
 class RAGChain:
     def __init__(self) -> None:
@@ -16,7 +19,7 @@ class RAGChain:
     def initialize_chain(self) -> None:
         if self.vector_store.vector_store is None:
             raise ValueError("Vector store has not been initialized with documents")
-        
+
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",

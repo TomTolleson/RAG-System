@@ -1,6 +1,8 @@
 from langchain_milvus import Milvus
-from src.config.settings import MILVUS_HOST, MILVUS_PORT, COLLECTION_NAME
+
+from src.config.settings import COLLECTION_NAME, MILVUS_HOST, MILVUS_PORT
 from src.embeddings.embedding_handler import EmbeddingHandler
+
 
 class MilvusStore:
     def __init__(self):
@@ -13,10 +15,10 @@ class MilvusStore:
             },
             collection_name=COLLECTION_NAME
         )
-    
+
     def add_documents(self, documents):
         return self.vector_store.add_documents(documents)
-    
+
     def get_retriever(self, search_kwargs=None):
         if search_kwargs is None:
             search_kwargs = {"k": 3}
