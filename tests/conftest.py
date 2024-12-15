@@ -3,6 +3,8 @@ from pathlib import Path
 import tempfile
 from unittest.mock import Mock
 from typing import Generator, Union
+from src.vector_store.milvus_store import MilvusStore
+from src.rag.rag_chain import RAGChain
 
 
 @pytest.fixture
@@ -36,3 +38,13 @@ def mock_openai(mocker) -> dict[str, Union[Mock, Mock]]:
     mocker.patch('src.vector_store.milvus_store.OpenAIEmbeddings', return_value=mock_embeddings)
     mocker.patch('src.rag.rag_chain.ChatOpenAI', return_value=mock_chat)
     return {'embeddings': mock_embeddings, 'chat': mock_chat}
+
+
+@pytest.fixture
+def milvus_store(mock_openai) -> MilvusStore:
+    return MilvusStore()
+
+
+@pytest.fixture
+def rag_chain(mock_openai, mock_milvus) -> RAGChain:
+    return RAGChain()
