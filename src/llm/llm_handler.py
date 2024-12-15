@@ -10,7 +10,7 @@ class LLMHandler:
             openai_api_key=OPENAI_API_KEY
         )
 
-    def get_rag_prompt(self):
+    def get_rag_prompt(self) -> PromptTemplate:
         template = """Use the following pieces of context to answer the question at the end. 
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -24,6 +24,6 @@ class LLMHandler:
             input_variables=["context", "question"]
         )
 
-    def get_llm(self):
+    def get_llm(self) -> ChatOpenAI:
         return self.llm
 
