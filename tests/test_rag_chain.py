@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import Mock
 from src.rag.rag_chain import RAGChain
+from langchain_core.documents import Document
 
 
 def test_rag_chain_initialization(rag_chain: RAGChain, mock_openai):
@@ -15,7 +16,12 @@ def test_initialize_chain_without_documents(rag_chain: RAGChain):
         rag_chain.initialize_chain()
 
 
-def test_initialize_chain_with_documents(rag_chain: RAGChain):
+def test_initialize_chain_with_documents(rag_chain: RAGChain, mock_milvus):
+    # Add documents to vector store first
+    test_docs = [Document(page_content="Test content")]
+    rag_chain.vector_store.vector_store = mock_milvus  # Set the mock directly
+    
+    # Now initialize chain
     rag_chain.initialize_chain()
     assert rag_chain.qa_chain is not None
 

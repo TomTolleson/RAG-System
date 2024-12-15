@@ -1,10 +1,13 @@
 import pytest
 from pathlib import Path
 import tempfile
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 from typing import Generator, Union
 from src.vector_store.milvus_store import MilvusStore
 from src.rag.rag_chain import RAGChain
+from langchain_openai import ChatOpenAI
+from langchain_community.vectorstores import Milvus
+from langchain_core.retrievers import BaseRetriever
 
 
 @pytest.fixture
@@ -23,20 +26,33 @@ def mock_openai_key(monkeypatch):
 
 @pytest.fixture
 def mock_milvus(mocker) -> Mock:
-    # Mock the entire Milvus connection and operations
+    # Create a mock retriever that implements the BaseRetriever interface
+    mock_retriever = create_autospec(BaseRetriever, instance=True)
+    mock_retriever.get_relevant_documents.return_value = []
+    
+    # Create a mock Milvus instance
+    mock_milvus = create_autospec(Milvus, instance=True)
+    mock_milvus.as_retriever.return_value = mock_retriever
+    
+    # Patch the Milvus connection
     mocker.patch('pymilvus.connections.connect')
-    mock_milvus = Mock()
     mocker.patch('langchain_community.vectorstores.milvus.Milvus.from_documents', return_value=mock_milvus)
+    
     return mock_milvus
 
 
 @pytest.fixture
 def mock_openai(mocker) -> dict[str, Union[Mock, Mock]]:
-    # Mock OpenAI embeddings and chat
+    # Create a proper mock that mimics ChatOpenAI
+    mock_chat = create_autospec(ChatOpenAI, instance=True)
+    mock_chat.invoke.return_value = {"response": "test response"}
+    
     mock_embeddings = Mock()
-    mock_chat = Mock()
+    
+    # Update the patches to use the autospec'd mock
     mocker.patch('src.vector_store.milvus_store.OpenAIEmbeddings', return_value=mock_embeddings)
     mocker.patch('src.rag.rag_chain.ChatOpenAI', return_value=mock_chat)
+    
     return {'embeddings': mock_embeddings, 'chat': mock_chat}
 
 
