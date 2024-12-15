@@ -6,17 +6,15 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 
-# Line length configuration
-line-length = 88
-
 # Allow unused variables when underscore-prefixed
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-# Python target version
-target-version = "py312"
 
 [format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+max-line-length = 88
+
+[tool.ruff]
+target-version = "py312"
