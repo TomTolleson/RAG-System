@@ -32,6 +32,7 @@ class RAGChain:
     def query(self, question: str) -> str:
         if self.qa_chain is None:
             self.initialize_chain()
-        assert self.qa_chain is not None  # for mypy
+        if self.qa_chain is None:
+            raise RuntimeError("Failed to initialize QA chain")
         result = self.qa_chain.invoke({"query": question})
         return str(result.get("result", ""))
