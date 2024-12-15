@@ -26,6 +26,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install ruff pytest pytest-cov pytest-asyncio pytest-mock
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install mypy types-Flask
         
         
     - name: Type check with mypy

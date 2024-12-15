@@ -13,3 +13,4 @@ pytest-asyncio>=0.21.1
 flake8
 black 
 pylint
+types-flask
