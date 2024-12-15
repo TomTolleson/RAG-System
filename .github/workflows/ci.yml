@@ -15,7 +15,7 @@ jobs:
 
     services:
       milvus:
-        image: milvusdb/milvus:v2.4.12-standalone
+        image: milvusdb/milvus:v2.3.5-standalone
         env:
           ETCD_ENDPOINTS: localhost:2379
           MINIO_ADDRESS: localhost:9000
@@ -30,7 +30,7 @@ jobs:
           --health-retries 3
       
       minio:
-        image: quay.io/minio/minio:latest
+        image: quay.io/minio/minio:RELEASE.2024-02-26T09-33-48Z
         ports:
           - 9000:9000
         env:
@@ -41,6 +41,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --entrypoint "minio server /data"
 
     steps:
     - uses: actions/checkout@v4
