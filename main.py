@@ -1,13 +1,15 @@
 from pathlib import Path
+from typing import List
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
+from langchain.schema import Document
 
 from src.config.settings import CHUNK_SIZE, CHUNK_OVERLAP
 from src.rag.rag_chain import RAGChain
 
 
-def load_documents(file_path):
+def load_documents(file_path: str) -> List[Document]:
     loader = TextLoader(file_path)
     documents = loader.load()
     text_splitter = CharacterTextSplitter(
@@ -17,7 +19,7 @@ def load_documents(file_path):
     return text_splitter.split_documents(documents)
 
 
-def main():
+def main() -> None:
     # Initialize RAG chain
     rag_chain = RAGChain()
     
@@ -26,7 +28,7 @@ def main():
     if not data_path.exists():
         raise FileNotFoundError(f"Document not found at {data_path}")
     
-    documents = load_documents(data_path)
+    documents = load_documents(str(data_path))
     rag_chain.vector_store.add_documents(documents)
     
     # Query the system

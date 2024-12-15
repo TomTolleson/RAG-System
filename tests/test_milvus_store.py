@@ -1,9 +1,10 @@
 import pytest
+from typing import List
 from langchain_core.documents import Document
 
 
 @pytest.fixture
-def sample_documents():
+def sample_documents() -> List[Document]:
     return [
         Document(page_content="Test document 1", metadata={"source": "test1"}),
         Document(page_content="Test document 2", metadata={"source": "test2"})

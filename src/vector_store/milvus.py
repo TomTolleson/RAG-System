@@ -1,3 +1,4 @@
+from typing import Any, Dict, List
 from langchain_milvus import Milvus
 from src.config.settings import MILVUS_HOST, MILVUS_PORT, COLLECTION_NAME
 from src.embeddings.embedding_handler import EmbeddingHandler
@@ -14,10 +15,8 @@ class MilvusStore:
             collection_name=COLLECTION_NAME
         )
     
-    def add_documents(self, documents):
+    def add_documents(self, documents: List[Any]) -> Any:
         return self.vector_store.add_documents(documents)
     
-    def get_retriever(self, search_kwargs=None):
-        if search_kwargs is None:
-            search_kwargs = {"k": 3}
+    def get_retriever(self, search_kwargs: Dict[str, Any] = {"k": 3}) -> Any:
         return self.vector_store.as_retriever(search_kwargs=search_kwargs)

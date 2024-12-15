@@ -2,10 +2,11 @@ import pytest
 from pathlib import Path
 import tempfile
 from unittest.mock import Mock
+from typing import Generator, Union
 
 
 @pytest.fixture
-def temp_document():
+def temp_document() -> Generator[Path, None, None]:
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         f.write("This is a test document about Milvus.")
         temp_path = Path(f.name)
@@ -19,7 +20,7 @@ def mock_openai_key(monkeypatch):
 
 
 @pytest.fixture
-def mock_milvus(mocker):
+def mock_milvus(mocker) -> Mock:
     # Mock the entire Milvus connection and operations
     mocker.patch('pymilvus.connections.connect')
     mock_milvus = Mock()
@@ -28,7 +29,7 @@ def mock_milvus(mocker):
 
 
 @pytest.fixture
-def mock_openai(mocker):
+def mock_openai(mocker) -> dict[str, Union[Mock, Mock]]:
     # Mock OpenAI embeddings and chat
     mock_embeddings = Mock()
     mock_chat = Mock()

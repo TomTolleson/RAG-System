@@ -1,15 +1,21 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from ..vector_store.milvus_store import MilvusStore
-from ..config.settings import OPENAI_API_KEY, TEMPERATURE
+import os
+from dotenv import load_dotenv
+from pydantic import SecretStr
+
+load_dotenv()
 
 class RAGChain:
     def __init__(self) -> None:
         self.vector_store = MilvusStore()
+        api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
+        secret_key: Optional[SecretStr] = SecretStr(api_key) if api_key else None
         self.llm = ChatOpenAI(
-            temperature=TEMPERATURE,
-            openai_api_type=OPENAI_API_KEY
+            temperature=0.0,
+            api_key=secret_key
         )
         self.qa_chain: Optional[RetrievalQA] = None
 
@@ -26,7 +32,6 @@ class RAGChain:
     def query(self, question: str) -> str:
         if self.qa_chain is None:
             self.initialize_chain()
-        result = self.qa_chain.invoke({"query": question})["result"]
-        if result is None:
-            return ""
-        return result
+        assert self.qa_chain is not None  # for mypy
+        result = self.qa_chain.invoke({"query": question})
+        return str(result.get("result", ""))
