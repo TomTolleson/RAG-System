@@ -1,0 +1,19 @@
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "B", "W", "I001"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Per-file ignores
+[per-file-ignores]
+"**/tests/*" = ["E402"]  # Ignore import order issues in test files
+"**/config/*" = ["E226"]  # Ignore "too many inline comments" in config files
+
+# Formatting options
+quote-style = ["double"]
+indent-style = ["space"]
+skip-magic-trailing-comma = false
+line-ending = ["auto"]
