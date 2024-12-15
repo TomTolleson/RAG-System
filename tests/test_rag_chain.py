@@ -36,7 +36,7 @@ def test_initialize_chain_with_documents(rag_chain):
     rag_chain.initialize_chain()
     assert rag_chain.qa_chain is not None
 
-def test_query_initializes_chain(rag_chain):
+def test_query_initializes_chain(rag_chain, mock_milvus, mock_openai):
     mock_response = {"result": "Test response"}
     rag_chain.qa_chain = Mock()
     rag_chain.qa_chain.invoke.return_value = mock_response

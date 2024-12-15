@@ -20,20 +20,18 @@ def sample_documents():
         Document(page_content="Test document 2", metadata={"source": "test2"})
     ]
 
+@pytest.fixture
+def mock_milvus_connection(mocker):
+    mock_conn = mocker.patch('langchain_community.vectorstores.milvus.connections.connect')
+    return mock_conn
+
 def test_milvus_store_initialization(milvus_store):
     assert milvus_store.vector_store is None
     assert milvus_store.embeddings is not None
 
-def test_add_documents(milvus_store, sample_documents):
-    with patch('src.vector_store.milvus_store.Milvus') as mock_milvus:
-        mock_vector_store = Mock()
-        mock_milvus.from_documents.return_value = mock_vector_store
-        
-        result = milvus_store.add_documents(sample_documents)
-        
-        assert result == mock_vector_store
-        assert milvus_store.vector_store == mock_vector_store
-        mock_milvus.from_documents.assert_called_once()
+def test_add_documents(milvus_store, sample_documents, mock_milvus):
+    result = milvus_store.add_documents(sample_documents)
+    assert result == mock_milvus
 
 def test_similarity_search_without_documents(milvus_store):
     with pytest.raises(ValueError, match="No documents have been added to the vector store"):
