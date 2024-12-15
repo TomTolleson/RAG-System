@@ -155,7 +155,9 @@ dmypy.json
 cython_debug/
 
 #volumes
+volumes/
 volumes/*
+.volumes/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
@@ -183,6 +185,8 @@ venv/
 
 # Milvus and MinIO data
 volumes/
+volumes/*
+.volumes/
 
 # Docker
 .docker/

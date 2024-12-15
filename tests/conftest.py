@@ -18,9 +18,9 @@ def mock_openai_key(monkeypatch):
 @pytest.fixture
 def mock_milvus(mocker):
     # Mock the entire Milvus connection and operations
-    mocker.patch('langchain_community.vectorstores.milvus.connections.connect')
+    mocker.patch('pymilvus.connections.connect')
     mock_milvus = Mock()
-    mocker.patch('langchain_community.vectorstores.Milvus.from_documents', return_value=mock_milvus)
+    mocker.patch('langchain_community.vectorstores.milvus.Milvus.from_documents', return_value=mock_milvus)
     return mock_milvus
 
 @pytest.fixture
@@ -28,6 +28,6 @@ def mock_openai(mocker):
     # Mock OpenAI embeddings and chat
     mock_embeddings = Mock()
     mock_chat = Mock()
-    mocker.patch('langchain_openai.OpenAIEmbeddings', return_value=mock_embeddings)
-    mocker.patch('langchain_openai.ChatOpenAI', return_value=mock_chat)
+    mocker.patch('src.vector_store.milvus_store.OpenAIEmbeddings', return_value=mock_embeddings)
+    mocker.patch('src.rag.rag_chain.ChatOpenAI', return_value=mock_chat)
     return {'embeddings': mock_embeddings, 'chat': mock_chat}

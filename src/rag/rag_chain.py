@@ -1,18 +1,19 @@
+from typing import Optional
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from ..vector_store.milvus_store import MilvusStore
 from ..config.settings import OPENAI_API_KEY, TEMPERATURE
 
 class RAGChain:
-    def __init__(self):
+    def __init__(self) -> None:
         self.vector_store = MilvusStore()
         self.llm = ChatOpenAI(
             temperature=TEMPERATURE,
             openai_api_key=OPENAI_API_KEY
         )
-        self.qa_chain = None
+        self.qa_chain: Optional[RetrievalQA] = None
 
-    def initialize_chain(self):
+    def initialize_chain(self) -> None:
         if self.vector_store.vector_store is None:
             raise ValueError("Vector store has not been initialized with documents")
         
