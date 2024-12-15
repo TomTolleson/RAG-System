@@ -13,36 +13,6 @@ jobs:
       matrix:
         python-version: ["3.12"]
 
-    services:
-      milvus:
-        image: milvusdb/milvus:v2.3.5-standalone
-        env:
-          ETCD_ENDPOINTS: localhost:2379
-          MINIO_ADDRESS: localhost:9000
-          STANDALONE: "true"
-        ports:
-          - 19530:19530
-          - 9091:9091
-        options: >-
-          --health-cmd "sleep 60"
-          --health-interval 30s
-          --health-timeout 20s
-          --health-retries 3
-      
-      minio:
-        image: quay.io/minio/minio:RELEASE.2024-02-26T09-33-48Z
-        ports:
-          - 9000:9000
-        env:
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-        options: >-
-          --health-cmd "sleep 10"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --entrypoint "minio server /data"
-
     steps:
     - uses: actions/checkout@v4
     
@@ -54,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff pytest pytest-cov pytest-asyncio
+        pip install ruff pytest pytest-cov pytest-asyncio pytest-mock
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
     - name: Lint with ruff
@@ -70,8 +40,7 @@ jobs:
     - name: Run tests with pytest
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        MILVUS_HOST: localhost
-        MILVUS_PORT: 19530
+        TESTING: "true"
       run: |
         pytest --cov=src tests/ --cov-report=xml
         
