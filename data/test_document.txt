@@ -1,2 +1,24 @@
 This is a test document about Milvus. Milvus is a highly scalable vector database built for AI applications.
 Milvus provides CRUD operations, scalar filtering, and supports both CPU and GPU implementations. It has a cloud-native architecture and integrates well with modern ML/AI workflows.
+
+Artificial Intelligence (AI) is a branch of computer science that focuses on creating intelligent machines capable of performing tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, understanding natural language, and perception.
+
+Key Components of AI:
+1. Machine Learning: Systems that can learn from data and improve their performance over time.
+2. Natural Language Processing: The ability to understand and generate human language.
+3. Computer Vision: The ability to interpret and understand visual information.
+4. Robotics: The integration of AI with physical machines.
+
+Applications of AI:
+- Healthcare: Diagnosis, treatment planning, and drug discovery
+- Finance: Fraud detection, algorithmic trading, and risk assessment
+- Transportation: Self-driving cars and traffic management
+- Education: Personalized learning and automated grading
+- Customer Service: Chatbots and virtual assistants
+
+Ethical Considerations:
+- Privacy concerns
+- Job displacement
+- Bias in AI systems
+- Decision-making transparency
+- Accountability for AI actions

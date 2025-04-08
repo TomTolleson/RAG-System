@@ -1,17 +1,33 @@
-langchain 
-pymilvus 
-openai
-langchain-community
-python-dotenv
-langchain-openai
+fastapi==0.109.2
+uvicorn==0.27.1
+python-multipart==0.0.9
+langchain==0.1.9
+langchain-openai==0.0.5
+langchain-community==0.0.21
+chromadb==0.4.22
+python-dotenv==1.0.1
+pydantic==2.6.1
+pandas==2.2.0
+unstructured==0.10.30
+pypdf==4.0.0
+python-docx==1.0.1
+beautifulsoup4==4.12.0
+lxml==4.9.0
+requests==2.31.0
+urllib3==1.26.18
+tqdm==4.66.0
+openai==1.12.0
+httpx==0.27.0
 
 # Testing
-pytest>=7.4.0
-pytest-cov>=4.1.0
-pytest-mock>=3.11.1
-pytest-asyncio>=0.21.1
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-mock==3.11.1
+pytest-asyncio==0.21.1
+
+# Linting
 flake8
-black 
+black
 pylint
 types-flask
 mypy

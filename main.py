@@ -1,41 +1,85 @@
+import argparse
 from pathlib import Path
-from typing import List
+from typing import Optional
+import logging
 
-from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.document_loaders import TextLoader
-from langchain.schema import Document
-
-from src.config.settings import CHUNK_SIZE, CHUNK_OVERLAP
+from src.rag.document_loader import DocumentLoader
 from src.rag.rag_chain import RAGChain
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-def load_documents(file_path: str) -> List[Document]:
-    loader = TextLoader(file_path)
-    documents = loader.load()
-    text_splitter = CharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP
-    )
-    return text_splitter.split_documents(documents)
+def process_documents(directory_path: Path, rag_chain: RAGChain) -> None:
+    """Process all documents in the given directory."""
+    try:
+        document_loader = DocumentLoader()
+        documents = document_loader.load_directory(directory_path)
+        
+        if not documents:
+            logger.warning(f"No documents found in {directory_path}")
+            return
+            
+        logger.info(f"Processing {len(documents)} document chunks...")
+        rag_chain.vector_store.add_documents(documents)
+        logger.info("Documents processed successfully")
+    except Exception as e:
+        logger.error(f"Error processing documents: {str(e)}")
+        raise
 
+def interactive_query(rag_chain: RAGChain) -> None:
+    """Run an interactive query session."""
+    print("\nWelcome to the RAG System! Type 'exit' to quit.")
+    print("You can ask questions about your documents, and I'll try to answer them.")
+    
+    while True:
+        try:
+            question = input("\nYour question: ").strip()
+            if question.lower() == 'exit':
+                break
+                
+            if not question:
+                continue
+                
+            result = rag_chain.query(question)
+            print("\nAnswer:", result)
+            
+        except Exception as e:
+            logger.error(f"Error processing query: {str(e)}")
+            print("Sorry, there was an error processing your question. Please try again.")
 
 def main() -> None:
-    # Initialize RAG chain
-    rag_chain = RAGChain()
+    parser = argparse.ArgumentParser(description="RAG System for Document Question Answering")
+    parser.add_argument(
+        "--documents",
+        type=str,
+        default="data",
+        help="Path to directory containing documents (default: data/)"
+    )
+    args = parser.parse_args()
     
-    # Initialize vector store and add documents
-    data_path = Path("data/test_document.txt")
-    if not data_path.exists():
-        raise FileNotFoundError(f"Document not found at {data_path}")
-    
-    documents = load_documents(str(data_path))
-    rag_chain.vector_store.add_documents(documents)
-    
-    # Query the system
-    question = "What are the key features of Milvus?"
-    result = rag_chain.query(question)
-    print(result)
-
+    try:
+        # Initialize RAG chain
+        logger.info("Initializing RAG system...")
+        rag_chain = RAGChain()
+        
+        # Process documents
+        documents_path = Path(args.documents)
+        if not documents_path.exists():
+            logger.error(f"Documents directory not found: {documents_path}")
+            return
+            
+        process_documents(documents_path, rag_chain)
+        
+        # Start interactive query session
+        interactive_query(rag_chain)
+        
+    except Exception as e:
+        logger.error(f"Fatal error: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()

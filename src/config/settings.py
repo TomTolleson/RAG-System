@@ -1,15 +1,16 @@
 from pathlib import Path
+import os
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Milvus settings
-MILVUS_HOST = "localhost"
-MILVUS_PORT = 19530
+# ChromaDB settings
+CHROMA_HOST = "localhost"
+CHROMA_PORT = 8000
 COLLECTION_NAME = "documents"
 
 # OpenAI settings
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Document processing settings
 CHUNK_SIZE = 1000
