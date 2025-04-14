@@ -23,6 +23,6 @@ setup(
         "requests==2.31.0",
         "urllib3==1.26.18",
         "tqdm==4.66.0",
-        "httpx==0.27.0"
+        "httpx==0.28.1"
     ],
 ) 
