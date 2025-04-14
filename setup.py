@@ -13,7 +13,7 @@ setup(
         "python-multipart==0.0.9",
         "openai==1.12.0",
         "chromadb==0.4.22",
-        "python-dotenv==1.0.1",
+        "python-dotenv==1.1.0",
         "pydantic==2.10.3",
         "unstructured==0.10.30",
         "pypdf==4.0.0",
