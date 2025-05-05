@@ -6,7 +6,7 @@ langchain-openai==0.0.5
 langchain-community==0.0.21
 chromadb==0.4.22
 python-dotenv==1.0.1
-pydantic==2.6.1
+pydantic==2.11.4
 pandas==2.2.0
 unstructured==0.10.30
 pypdf==4.0.0
