@@ -9,7 +9,7 @@ setup(
         "langchain-openai==0.0.2",
         "langchain-community==0.0.10",
         "fastapi==0.109.2",
-        "uvicorn==0.27.1",
+        "uvicorn==0.35.0",
         "python-multipart==0.0.9",
         "openai==1.12.0",
         "chromadb==0.4.22",
