@@ -15,7 +15,7 @@ setup(
         "chromadb==0.4.22",
         "python-dotenv==1.0.1",
         "pydantic==2.10.3",
-        "unstructured==0.10.30",
+        "unstructured==0.18.3",
         "pypdf==4.0.0",
         "python-docx==1.0.1",
         "beautifulsoup4==4.12.0",
