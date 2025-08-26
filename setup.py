@@ -20,7 +20,7 @@ setup(
         "python-docx==1.0.1",
         "beautifulsoup4==4.12.0",
         "lxml==4.9.0",
-        "requests==2.31.0",
+        "requests==2.32.5",
         "urllib3==1.26.18",
         "tqdm==4.66.0",
         "httpx==0.27.0"
