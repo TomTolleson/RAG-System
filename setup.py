@@ -11,7 +11,7 @@ setup(
         "fastapi==0.109.2",
         "uvicorn==0.27.1",
         "python-multipart==0.0.9",
-        "openai==1.12.0",
+        "openai==1.107.2",
         "chromadb==0.4.22",
         "python-dotenv==1.0.1",
         "pydantic==2.10.3",
