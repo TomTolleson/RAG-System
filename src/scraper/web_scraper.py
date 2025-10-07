@@ -45,7 +45,7 @@ class WebScraper:
     def download_file(self, url: str) -> Optional[Path]:
         """Download a file from the given URL."""
         try:
-            response = requests.get(url, stream=True)
+            response = requests.get(url, stream=True, timeout=30)  # nosec B113
             response.raise_for_status()
             
             # Get filename from URL or content-disposition
@@ -83,7 +83,7 @@ class WebScraper:
         downloaded_files = []
         
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=30)  # nosec B113
             response.raise_for_status()
             
             # Save the HTML page

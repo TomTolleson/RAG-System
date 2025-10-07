@@ -49,7 +49,8 @@ class ConfluenceScraper:
                 url,
                 auth=self.auth,
                 headers=self.headers,
-                params=params
+                params=params,
+                timeout=30  # nosec B113
             )
             response.raise_for_status()
             
@@ -73,7 +74,8 @@ class ConfluenceScraper:
                 download_url,
                 auth=self.auth,
                 headers=self.headers,
-                stream=True
+                stream=True,
+                timeout=30  # nosec B113
             )
             response.raise_for_status()
             
@@ -97,7 +99,8 @@ class ConfluenceScraper:
         response = requests.get(
             url,
             auth=self.auth,
-            headers=self.headers
+            headers=self.headers,
+            timeout=30  # nosec B113
         )
         response.raise_for_status()
         
