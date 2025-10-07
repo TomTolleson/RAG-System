@@ -88,6 +88,20 @@ echo "Your document content here" > data/test_document.txt
 python main.py
 ```
 
+## Local CI commands
+
+Run tests with coverage:
+
+```bash
+pytest -q --maxfail=1 --disable-warnings --cov=src --cov-report=term-missing
+```
+
+Run linting:
+
+```bash
+flake8
+```
+
 ## Configuration
 
 ### Milvus Settings

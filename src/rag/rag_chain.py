@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class RAGChain:
     def __init__(self):
         openai_api_key = os.getenv("OPENAI_API_KEY")

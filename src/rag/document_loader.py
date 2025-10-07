@@ -10,9 +10,8 @@ from langchain_community.document_loaders import (
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from src.config.settings import CHUNK_SIZE, CHUNK_OVERLAP
-import pandas as pd
-import io
 import re
+
 
 class DocumentLoader:
     """Handles loading and processing of various document types."""
@@ -206,4 +205,4 @@ class DocumentLoader:
                     print(f"Warning: Could not process {file_path}: {str(e)}")
                     continue
                     
-        return all_documents 
+        return all_documents

@@ -28,26 +28,42 @@ def mock_chroma(mocker) -> Mock:
     # Create a mock retriever that implements the BaseRetriever interface
     mock_retriever = create_autospec(BaseRetriever, instance=True)
     mock_retriever.get_relevant_documents.return_value = []
-    
-    # Create a mock ChromaDB instance
-    mock_chroma = create_autospec(ChromaStore, instance=True)
-    mock_chroma.as_retriever.return_value = mock_retriever
-    
-    return mock_chroma
+
+    # Create a mock Chroma-like vectorstore with an as_retriever method
+    mock_vectorstore = Mock()
+    mock_vectorstore.as_retriever.return_value = mock_retriever
+
+    # Patch the LangChain Chroma class used inside RAGChain.initialize_chain
+    mocker.patch('src.rag.rag_chain.Chroma', return_value=mock_vectorstore)
+
+    return mock_vectorstore
 
 
 @pytest.fixture
-def mock_openai(mocker) -> dict[str, Union[Mock, Mock]]:
-    # Create a proper mock that mimics ChatOpenAI
+def mock_openai(mocker, mock_openai_key) -> dict[str, Union[Mock, Mock]]:
+    # Mock ChatOpenAI used in RAGChain
     mock_chat = create_autospec(ChatOpenAI, instance=True)
-    mock_chat.invoke.return_value = {"response": "test response"}
-    
-    mock_embeddings = Mock()
-    
-    # Update the patches to use the autospec'd mock
-    mocker.patch('src.vector_store.chroma_store.OpenAIEmbeddingFunction', return_value=mock_embeddings)
+    mock_chat.invoke.return_value = {"result": "test response"}
+
+    # Provide an embedding function with the correct __call__(input) signature
+    class DummyEmbeddings:
+        def __call__(self, input):
+            if isinstance(input, list):
+                return [[0.1, 0.2, 0.3] for _ in input]
+            return [[0.1, 0.2, 0.3]]
+
+        def embed_documents(self, texts):
+            return [[0.1, 0.2, 0.3] for _ in texts]
+
+        def embed_query(self, text):
+            return [0.1, 0.2, 0.3]
+
+    mock_embeddings = DummyEmbeddings()
+
+    # Patch classes to return our mocks
+    mocker.patch('src.vector_store.chroma_store.OpenAIEmbeddings', return_value=mock_embeddings)
     mocker.patch('src.rag.rag_chain.ChatOpenAI', return_value=mock_chat)
-    
+
     return {'embeddings': mock_embeddings, 'chat': mock_chat}
 
 

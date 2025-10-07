@@ -7,6 +7,7 @@ from pydantic import SecretStr
 # Load environment variables from .env file
 load_dotenv()
 
+
 class EmbeddingHandler:
     def __init__(self):
         api_key: Optional[str] = os.getenv("OPENAI_API_KEY")

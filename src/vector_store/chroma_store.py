@@ -7,6 +7,7 @@ from src.embeddings.openai_embeddings import OpenAIEmbeddings
 
 load_dotenv()
 
+
 class ChromaStore:
     def __init__(
         self,
@@ -63,9 +64,23 @@ class ChromaStore:
             collection = self._chroma_client.get_or_create_collection(collection_name)
 
             # Prepare data
-            texts = [doc["text"] for doc in documents]
+            texts: List[str] = []
+            metadata: List[Dict[str, Any]] = []
+
+            for doc in documents:
+                # Support LangChain Document objects and plain dicts
+                if hasattr(doc, "page_content"):
+                    texts.append(str(getattr(doc, "page_content")))
+                    meta = getattr(doc, "metadata", {}) or {}
+                    metadata.append(meta)
+                elif isinstance(doc, dict):
+                    texts.append(str(doc.get("text", "")))
+                    metadata.append(doc.get("metadata", {}) or {})
+                else:
+                    texts.append(str(doc))
+                    metadata.append({})
+
             embeddings = self._embedding_function.embed_documents(texts)
-            metadata = [doc.get("metadata", {}) for doc in documents]
             # Generate IDs (ChromaDB requires string IDs)
             ids = [str(i) for i in range(len(texts))]
 
@@ -130,4 +145,4 @@ class ChromaStore:
 
     def __del__(self):
         """Clean up resources when the object is destroyed."""
-        # ChromaDB handles cleanup automatically 
+        # ChromaDB handles cleanup automatically

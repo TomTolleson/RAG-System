@@ -10,28 +10,22 @@ def test_rag_chain_initialization(rag_chain: RAGChain, mock_openai):
     assert rag_chain.llm is not None
 
 
-def test_initialize_chain_without_documents(rag_chain: RAGChain):
-    rag_chain.vector_store.vector_store = None
-    with pytest.raises(ValueError, match="Vector store has not been initialized with documents"):
-        rag_chain.initialize_chain()
+def test_initialize_chain_initializes_with_space(rag_chain: RAGChain):
+    # Should not raise when provided a collection name
+    rag_chain.initialize_chain("test_collection")
 
 
-def test_initialize_chain_with_documents(rag_chain: RAGChain, mock_milvus):
-    # Add documents to vector store first
-    test_docs = [Document(page_content="Test content")]
-    rag_chain.vector_store.vector_store = mock_milvus  # Set the mock directly
-    
-    # Now initialize chain
-    rag_chain.initialize_chain()
+def test_initialize_chain_with_documents(rag_chain: RAGChain, mock_chroma):
+    rag_chain.initialize_chain("test_collection")
     assert rag_chain.qa_chain is not None
 
 
-def test_query_initializes_chain(rag_chain: RAGChain, mock_milvus, mock_openai):
+def test_query_initializes_chain(rag_chain: RAGChain, mock_openai):
     mock_response = {"result": "Test response"}
     rag_chain.qa_chain = Mock()
     rag_chain.qa_chain.invoke.return_value = mock_response
-    
-    result = rag_chain.query("test question")
-    
-    assert result == "Test response"
+
+    result = rag_chain.query("test question", space_name="test_collection")
+
+    assert result == [{"text": "Test response", "metadata": {"source": "qa_chain"}}]
     rag_chain.qa_chain.invoke.assert_called_once()

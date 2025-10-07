@@ -1,6 +1,6 @@
 from typing import List, Union
-import openai
 from openai import OpenAI
+
 
 class OpenAIEmbeddings:
     def __init__(self, api_key: str, model_name: str = "text-embedding-3-small"):
@@ -10,11 +10,8 @@ class OpenAIEmbeddings:
     def __call__(self, input: Union[str, List[str]]) -> List[List[float]]:
         """Generate embeddings for input text(s)."""
         try:
-            # Convert single string to list
             if isinstance(input, str):
                 input = [input]
-            
-            # Ensure all inputs are strings
             input = [str(text) for text in input]
             
             response = self.client.embeddings.create(
@@ -28,9 +25,8 @@ class OpenAIEmbeddings:
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of texts."""
         try:
-            # Ensure all texts are strings
             texts = [str(text) for text in texts]
-            
+
             response = self.client.embeddings.create(
                 model=self.model_name,
                 input=texts
@@ -42,13 +38,12 @@ class OpenAIEmbeddings:
     def embed_query(self, text: str) -> List[float]:
         """Generate embedding for a single text query."""
         try:
-            # Ensure text is a string
             text = str(text)
-            
+
             response = self.client.embeddings.create(
                 model=self.model_name,
                 input=[text]
             )
             return response.data[0].embedding
         except Exception as e:
-            raise Exception(f"Failed to generate query embedding: {str(e)}") 
+            raise Exception(f"Failed to generate query embedding: {str(e)}")
