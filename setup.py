@@ -16,7 +16,7 @@ setup(
         "python-dotenv==1.0.1",
         "pydantic==2.10.3",
         "unstructured==0.10.30",
-        "pypdf==4.0.0",
+        "pypdf==6.1.1",
         "python-docx==1.0.1",
         "beautifulsoup4==4.12.0",
         "lxml==4.9.0",
