@@ -1,19 +1,48 @@
 version: 2
 updates:
+  # Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "09:00"
     open-pull-requests-limit: 10
+    reviewers:
+      - "TomTolleson"
+    assignees:
+      - "TomTolleson"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+    # Group minor and patch updates together
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  - package-ecosystem: "docker"
-    directory: "/"
+  # Node.js dependencies (for frontend)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10 
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "TomTolleson"
+    assignees:
+      - "TomTolleson"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "javascript"
