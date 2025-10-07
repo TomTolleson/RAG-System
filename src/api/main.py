@@ -94,7 +94,7 @@ async def upload_document(space_name: str, file: UploadFile = File(...)):
         os.makedirs(space_dir, exist_ok=True)
 
         # Save the uploaded file
-        file_path = os.path.join(space_dir, file.filename)
+        file_path = os.path.join(space_dir, file.filename or "")
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)

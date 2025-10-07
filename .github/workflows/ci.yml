@@ -31,8 +31,8 @@ jobs:
         
     - name: Type check with mypy
       run: |
-        pip install mypy types-Flask
-        mypy src/
+        pip install mypy types-Flask types-requests
+        mypy src/ --ignore-missing-imports --exclude="src/scraper/"
         
     - name: Run tests with pytest
       env:

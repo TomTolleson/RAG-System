@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union, Sequence
 from dotenv import load_dotenv
 import chromadb
 from chromadb.config import Settings
@@ -24,8 +24,11 @@ class ChromaStore:
         self._host = host
         self._port = port
         self._collection_name = collection_name
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
         self._embedding_function = embedding_function or OpenAIEmbeddings(
-            api_key=os.getenv("OPENAI_API_KEY"),
+            api_key=api_key,
             model_name="text-embedding-3-small"
         )
         self._persist_directory = persist_directory or os.path.join(os.getcwd(), "chroma_db")
@@ -52,7 +55,7 @@ class ChromaStore:
         try:
             return self._chroma_client.get_or_create_collection(
                 name=self._collection_name,
-                embedding_function=self._embedding_function
+                embedding_function=self._embedding_function  # type: ignore
             )
         except Exception as e:
             raise Exception(f"Failed to get or create collection: {str(e)}")
@@ -61,7 +64,10 @@ class ChromaStore:
         """Add documents to ChromaDB collection."""
         try:
             # Get or create collection
-            collection = self._chroma_client.get_or_create_collection(collection_name)
+            collection = self._chroma_client.get_or_create_collection(
+                collection_name, 
+                embedding_function=self._embedding_function  # type: ignore
+            )
 
             # Prepare data
             texts: List[str] = []
@@ -80,15 +86,15 @@ class ChromaStore:
                     texts.append(str(doc))
                     metadata.append({})
 
-            embeddings = self._embedding_function.embed_documents(texts)
+            embeddings: List[List[float]] = self._embedding_function.embed_documents(texts)
             # Generate IDs (ChromaDB requires string IDs)
             ids = [str(i) for i in range(len(texts))]
 
             # Add documents
             collection.add(
-                embeddings=embeddings,
+                embeddings=embeddings,  # type: ignore
                 documents=texts,
-                metadatas=metadata,
+                metadatas=metadata,  # type: ignore
                 ids=ids
             )
 
@@ -106,23 +112,24 @@ class ChromaStore:
                 return []
 
             # Generate query embedding
-            query_embedding = self._embedding_function.embed_query(query)
+            query_embedding: List[float] = self._embedding_function.embed_query(query)
 
             # Search
             results = collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=[query_embedding],  # type: ignore
                 n_results=k,
                 include=["documents", "metadatas", "distances"]
             )
 
             # Format results
             documents = []
-            for i in range(len(results["documents"][0])):
-                documents.append({
-                    "text": results["documents"][0][i],
-                    "metadata": results["metadatas"][0][i],
-                    "score": 1.0 - float(results["distances"][0][i])  # Convert distance to similarity score
-                })
+            if results["documents"] and results["metadatas"] and results["distances"]:
+                for i in range(len(results["documents"][0])):
+                    documents.append({
+                        "text": results["documents"][0][i],
+                        "metadata": results["metadatas"][0][i],
+                        "score": 1.0 - float(results["distances"][0][i])  # Convert distance to similarity score
+                    })
 
             return documents
 

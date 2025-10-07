@@ -25,9 +25,9 @@ class RAGChain:
         
         self.llm = ChatOpenAI(
             temperature=0.0,
-            openai_api_key=openai_api_key
+            api_key=openai_api_key
         )
-        self.qa_chain: Optional[RetrievalQA] = None
+        self.qa_chain: Optional[Any] = None
 
     def initialize_chain(self, collection_name: str) -> None:
         """Initialize the QA chain for a specific collection."""
@@ -59,6 +59,8 @@ class RAGChain:
                 self.initialize_chain(space_name)
             
             # Generate response using the QA chain
+            if self.qa_chain is None:
+                raise ValueError("QA chain not initialized")
             response = self.qa_chain.invoke({"query": query})
             
             # Format the response

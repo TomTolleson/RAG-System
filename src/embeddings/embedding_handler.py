@@ -13,7 +13,7 @@ class EmbeddingHandler:
         api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
         secret_key: Optional[SecretStr] = SecretStr(api_key) if api_key else None
         self.embeddings = OpenAIEmbeddings(
-            api_key=secret_key
+            api_key=secret_key.get_secret_value() if secret_key else None
         )
     
     def get_embeddings(self) -> OpenAIEmbeddings:
