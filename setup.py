@@ -19,7 +19,7 @@ setup(
         "pypdf==6.1.1",
         "python-docx==1.2.0",
         "beautifulsoup4==4.14.2",
-        "lxml==4.9.0",
+        "lxml==6.0.2",
         "requests==2.32.5",
         "urllib3==1.26.18",
         "tqdm==4.67.1",
