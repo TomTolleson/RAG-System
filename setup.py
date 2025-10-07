@@ -12,7 +12,7 @@ setup(
         "uvicorn==0.37.0",
         "python-multipart==0.0.20",
         "openai==1.12.0",
-        "chromadb==0.4.22",
+        "chromadb==1.1.1",
         "python-dotenv==1.1.1",
         "pydantic==2.12.0",
         "unstructured==0.18.15",
