@@ -1,29 +1,44 @@
+# Core API
 fastapi==0.118.0
 uvicorn==0.37.0
 python-multipart==0.0.20
+starlette==0.48.0
+
+# LangChain (be careful with major version updates)
 langchain==0.3.27
 langchain-openai==0.3.35
 langchain-community==0.3.30
+langchain-core==0.3.78
+
+# Vector Store
 chromadb==1.1.1
+
+# Environment
 python-dotenv==1.1.1
+
+# Data Processing
 pydantic==2.12.0
 pandas==2.3.3
 unstructured==0.18.15
 pypdf==6.1.1
 python-docx==1.2.0
+
+# Web Scraping
 beautifulsoup4==4.14.2
 lxml==6.0.2
 requests==2.32.5
-urllib3==1.26.18
+urllib3==2.5.0
+
+# Utilities
 tqdm==4.67.1
-openai==1.12.0
+openai==2.2.0
 httpx==0.28.1
 
 # Testing
 pytest==8.4.2
 pytest-cov==7.0.0
 pytest-mock==3.15.1
-pytest-asyncio==0.21.1
+pytest-asyncio==1.2.0
 
 # Linting
 flake8
@@ -31,3 +46,4 @@ black
 pylint
 types-flask
 mypy
+types-requests
