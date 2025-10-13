@@ -1,5 +1,5 @@
 # Core API
-fastapi==0.118.0
+fastapi==0.119.0
 uvicorn==0.37.0
 python-multipart==0.0.20
 starlette==0.48.0
@@ -7,8 +7,8 @@ starlette==0.48.0
 # LangChain (be careful with major version updates)
 langchain==0.3.27
 langchain-openai==0.3.35
-langchain-community==0.3.30
-langchain-core==0.3.78
+langchain-community==0.3.31
+langchain-core==0.3.79
 
 # Vector Store
 chromadb==1.1.1
@@ -31,7 +31,7 @@ urllib3==2.5.0
 
 # Utilities
 tqdm==4.67.1
-openai==2.2.0
+openai==2.3.0
 httpx==0.28.1
 
 # Testing
