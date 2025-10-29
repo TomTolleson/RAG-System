@@ -1,0 +1,198 @@
+name: Repository Status Check
+
+on:
+  schedule:
+    # Run daily at 9:00 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/status-check.yml'
+      - 'check_github_status.py'
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  security-events: read
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+    
+    - name: Run status check
+      id: status_check
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python check_github_status.py --json > status_report.json || true
+        python check_github_status.py || true
+    
+    - name: Parse status report
+      id: parse_status
+      run: |
+        if [ -f status_report.json ]; then
+          ALERTS=$(python -c "import json; data=json.load(open('status_report.json')); print(len(data.get('alerts', [])))")
+          CRITICAL=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'CRITICAL'))")
+          HIGH=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'HIGH'))")
+          FAILED_WORKFLOWS=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for w in data.get('workflows', []) if w.get('conclusion') == 'failure'))")
+          
+          echo "total_alerts=$ALERTS" >> $GITHUB_OUTPUT
+          echo "critical_alerts=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high_alerts=$HIGH" >> $GITHUB_OUTPUT
+          echo "failed_workflows=$FAILED_WORKFLOWS" >> $GITHUB_OUTPUT
+          
+          echo "📊 Status Summary:"
+          echo "   • Total alerts: $ALERTS"
+          echo "   • Critical: $CRITICAL"
+          echo "   • High: $HIGH"
+          echo "   • Failed workflows: $FAILED_WORKFLOWS"
+        else
+          echo "total_alerts=0" >> $GITHUB_OUTPUT
+          echo "critical_alerts=0" >> $GITHUB_OUTPUT
+          echo "high_alerts=0" >> $GITHUB_OUTPUT
+          echo "failed_workflows=0" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Upload status report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: status-report
+        path: status_report.json
+        retention-days: 7
+    
+    - name: Create issue for critical problems
+      if: steps.parse_status.outputs.critical_alerts > '0' || steps.parse_status.outputs.failed_workflows > '0'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let report = '';
+          try {
+            const data = JSON.parse(fs.readFileSync('status_report.json', 'utf8'));
+            report = `## 🔴 Critical Issues Detected
+          
+          **Report Generated:** ${new Date().toISOString()}
+          
+          ### Security Alerts
+          - Critical: ${steps.parse_status.outputs.critical_alerts}
+          - High: ${steps.parse_status.outputs.high_alerts}
+          - Total: ${steps.parse_status.outputs.total_alerts}
+          
+          ### Failed Workflows
+          - Count: ${steps.parse_status.outputs.failed_workflows}
+          
+          ### Action Required
+          Please review the status report and address the critical issues.
+          
+          View full report: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          `;
+          } catch (e) {
+            report = `## ⚠️ Status Check Issues
+          
+          Could not parse status report. Check workflow logs for details.
+          `;
+          }
+          
+          // Check if issue already exists
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: 'status-check-critical'
+          });
+          
+          if (issues.data.length === 0) {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔴 Critical Repository Issues Detected',
+              body: report,
+              labels: ['status-check', 'status-check-critical', 'automated']
+            });
+          } else {
+            // Update existing issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issues.data[0].number,
+              body: `## Updated Report - ${new Date().toISOString()}\n\n${report}`
+            });
+          }
+    
+    - name: Comment on PR if triggered by PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let comment = '## 📊 Repository Status Check\n\n';
+          
+          try {
+            const data = JSON.parse(fs.readFileSync('status_report.json', 'utf8'));
+            comment += `**Security Alerts:** ${data.alerts.length}\n`;
+            comment += `- Critical: ${data.alerts.filter(a => a.severity === 'CRITICAL').length}\n`;
+            comment += `- High: ${data.alerts.filter(a => a.severity === 'HIGH').length}\n\n`;
+            
+            const latestWorkflow = data.workflows[0];
+            if (latestWorkflow) {
+              const status = latestWorkflow.conclusion || latestWorkflow.status;
+              const icon = status === 'success' ? '✅' : status === 'failure' ? '❌' : '⚠️';
+              comment += `**Latest CI/CD:** ${icon} ${status}\n\n`;
+            }
+            
+            comment += `[View Full Report](${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+          } catch (e) {
+            comment += '⚠️ Could not generate status report.';
+          }
+          
+          github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number,
+            body: comment
+          });
+    
+    - name: Summary
+      run: |
+        echo "## 📊 Repository Status Check Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Alerts:** ${{ steps.parse_status.outputs.total_alerts }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Critical Alerts:** ${{ steps.parse_status.outputs.critical_alerts }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **High Alerts:** ${{ steps.parse_status.outputs.high_alerts }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Failed Workflows:** ${{ steps.parse_status.outputs.failed_workflows }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.parse_status.outputs.critical_alerts }}" -gt "0" ] || [ "${{ steps.parse_status.outputs.failed_workflows }}" -gt "0" ]; then
+          echo "⚠️ **Action Required:** Critical issues detected!" >> $GITHUB_STEP_SUMMARY
+          echo "Check the full report for details." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ **All Clear:** No critical issues detected." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f status_report.json ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Full Report" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          cat status_report.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        fi
+
