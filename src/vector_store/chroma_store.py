@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any, Optional, Union, Sequence
+from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 import chromadb
 from chromadb.config import Settings
@@ -62,10 +62,14 @@ class ChromaStore:
 
     def add_documents(self, documents: List[Dict[str, Any]], collection_name: str) -> None:
         """Add documents to ChromaDB collection."""
+        # Handle empty document list
+        if not documents:
+            return
+        
         try:
             # Get or create collection
             collection = self._chroma_client.get_or_create_collection(
-                collection_name, 
+                collection_name,
                 embedding_function=self._embedding_function  # type: ignore
             )
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
@@ -122,10 +122,10 @@ async def upload_document(space_name: str, file: UploadFile = File(...)):
 @app.delete("/spaces/{space_name}")
 async def delete_space(space_name: str):
     """Delete a space and its associated documents."""
+    if space_name == "default":
+        raise HTTPException(status_code=400, detail="Cannot delete the default space")
+    
     try:
-        if space_name == "default":
-            raise HTTPException(status_code=400, detail="Cannot delete the default space")
-        
         # Delete the space directory if it exists
         space_dir = os.path.join("data", space_name)
         if os.path.exists(space_dir):

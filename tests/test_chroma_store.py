@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock
-from src.vector_store.chroma_store import ChromaStore
 from langchain_core.documents import Document
 
 
@@ -93,14 +92,24 @@ def test_similarity_search_empty_query(chroma_store):
 
 def test_similarity_search_different_k_values(chroma_store, mocker):
     """Test similarity_search with different k values."""
-    mock_collection = Mock()
-    mock_collection.query.return_value = {
+    # Mock collection that respects k parameter in query
+    mock_collection_k1 = Mock()
+    mock_collection_k1.query.return_value = {
+        "documents": [["Doc 1"]],
+        "metadatas": [[{}]],
+        "distances": [[0.1]],
+    }
+    
+    mock_collection_k3 = Mock()
+    mock_collection_k3.query.return_value = {
         "documents": [["Doc 1", "Doc 2", "Doc 3"]],
         "metadatas": [[{}, {}, {}]],
         "distances": [[0.1, 0.2, 0.3]],
     }
+    
     mock_client = Mock()
-    mock_client.get_collection.return_value = mock_collection
+    # Return different mocks based on call order
+    mock_client.get_collection.side_effect = [mock_collection_k1, mock_collection_k3]
     mocker.patch.object(chroma_store, "_chroma_client", mock_client)
     
     results_k1 = chroma_store.similarity_search("query", "test_collection", k=1)

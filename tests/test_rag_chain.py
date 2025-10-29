@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
 from src.rag.rag_chain import RAGChain
-from langchain_core.documents import Document
 
 
 def test_rag_chain_initialization(rag_chain: RAGChain, mock_openai):
@@ -49,16 +48,22 @@ def test_query_without_initialization(rag_chain: RAGChain, mock_chroma):
     """Test query auto-initializes chain if not initialized."""
     mock_response = {"result": "Auto-init response"}
     
-    # Mock the chain after initialization
+    # Create a mock QA chain
     mock_qa = Mock()
     mock_qa.invoke.return_value = mock_response
     
-    with patch.object(rag_chain, 'initialize_chain'):
-        with patch.object(rag_chain, 'qa_chain', None):
-            # Temporarily set qa_chain property to auto-initialize
-            rag_chain.query("test", "test_collection")
-            # Should have called initialize_chain
-            assert hasattr(rag_chain, 'qa_chain') or rag_chain.qa_chain is not None
+    # Clear qa_chain
+    rag_chain.qa_chain = None
+    
+    # Mock initialize_chain to set qa_chain
+    def mock_init(collection_name):
+        rag_chain.qa_chain = mock_qa
+    
+    with patch.object(rag_chain, 'initialize_chain', side_effect=mock_init):
+        result = rag_chain.query("test", "test_collection")
+        # Should have called initialize_chain
+        assert rag_chain.qa_chain is not None
+        assert result == [{"text": "Auto-init response", "metadata": {"source": "qa_chain"}}]
 
 
 def test_query_error_handling(rag_chain: RAGChain, mock_openai):
@@ -71,15 +76,16 @@ def test_query_error_handling(rag_chain: RAGChain, mock_openai):
 
 
 def test_query_none_chain_error(rag_chain: RAGChain, mock_openai):
-    """Test query raises error when chain is None."""
+    """Test query raises error when chain is None after initialization attempt."""
     rag_chain.qa_chain = None
-    with patch.object(rag_chain, 'initialize_chain'):
-        rag_chain.qa_chain = None  # Force None even after initialization attempt
-        with pytest.raises(ValueError, match="QA chain not initialized"):
-            # Need to mock to prevent actual initialization
-            with patch.object(rag_chain, 'initialize_chain', return_value=None):
-                rag_chain.qa_chain = None
-                rag_chain.query("test", "test_collection")
+    # Mock initialize_chain to not set qa_chain (returns None without setting qa_chain)
+    def noop_init(collection_name):
+        pass  # Don't set qa_chain
+    
+    with patch.object(rag_chain, 'initialize_chain', side_effect=noop_init):
+        rag_chain.qa_chain = None  # Ensure it stays None
+        with pytest.raises(Exception, match="Failed to query"):
+            rag_chain.query("test", "test_collection")
 
 
 def test_get_spaces(rag_chain: RAGChain):

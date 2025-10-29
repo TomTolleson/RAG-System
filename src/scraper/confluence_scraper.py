@@ -1,11 +1,7 @@
-import os
 import requests
 from pathlib import Path
 import logging
 from typing import List, Dict, Any
-import json
-from urllib.parse import urljoin
-import base64
 
 class ConfluenceScraper:
     def __init__(self, base_url: str, email: str, api_token: str, output_dir: str = "data"):

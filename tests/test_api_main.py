@@ -1,10 +1,9 @@
 """Tests for the FastAPI application endpoints."""
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 import tempfile
-import os
 import shutil
 
 
@@ -45,15 +44,16 @@ def test_health_check_success(client):
     assert "collections" in data
 
 
-def test_health_check_unhealthy(client):
+def test_health_check_unhealthy(client, monkeypatch):
     """Test health check endpoint handles errors gracefully."""
     test_client, mock_chain = client
-    mock_chain.get_spaces.side_effect = Exception("Connection failed")
-    response = test_client.get("/api/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "unhealthy"
-    assert "error" in data
+    # Need to patch at the app level since rag_chain is initialized at module level
+    with patch('src.api.main.rag_chain.get_spaces', side_effect=Exception("Connection failed")):
+        response = test_client.get("/api/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "unhealthy"
+        assert "error" in data
 
 
 def test_list_spaces_success(client):
@@ -69,9 +69,9 @@ def test_list_spaces_success(client):
 def test_list_spaces_error(client):
     """Test listing spaces endpoint handles errors."""
     test_client, mock_chain = client
-    mock_chain.get_spaces.side_effect = Exception("Database error")
-    response = test_client.get("/spaces")
-    assert response.status_code == 500
+    with patch('src.api.main.rag_chain.get_spaces', side_effect=Exception("Database error")):
+        response = test_client.get("/spaces")
+        assert response.status_code == 500
 
 
 def test_create_space_success(client):
@@ -83,25 +83,27 @@ def test_create_space_success(client):
             {"text": "Test document", "metadata": {}}
         ]
     }
-    response = test_client.post("/spaces", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert "message" in data
-    assert "new-space" in data["message"]
-    mock_chain.add_documents.assert_called_once()
-    mock_chain.initialize_chain.assert_called_once_with("new-space")
+    with patch('src.api.main.rag_chain.add_documents') as mock_add, \
+         patch('src.api.main.rag_chain.initialize_chain') as mock_init:
+        response = test_client.post("/spaces", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "message" in data
+        assert "new-space" in data["message"]
+        mock_add.assert_called_once()
+        mock_init.assert_called_once_with("new-space")
 
 
 def test_create_space_error(client):
     """Test creating space handles errors."""
     test_client, mock_chain = client
-    mock_chain.add_documents.side_effect = Exception("Storage error")
     payload = {
         "name": "new-space",
         "documents": [{"text": "Test", "metadata": {}}]
     }
-    response = test_client.post("/spaces", json=payload)
-    assert response.status_code == 500
+    with patch('src.api.main.rag_chain.add_documents', side_effect=Exception("Storage error")):
+        response = test_client.post("/spaces", json=payload)
+        assert response.status_code == 500
 
 
 def test_query_space_success(client):
@@ -111,24 +113,25 @@ def test_query_space_success(client):
         "query": "What is this about?",
         "space_name": "test-space"
     }
-    response = test_client.post("/spaces/test-space/query", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert "results" in data
-    assert len(data["results"]) > 0
-    mock_chain.query.assert_called_once()
+    with patch('src.api.main.rag_chain.query', return_value=[{"text": "Test response", "metadata": {}}]) as mock_query:
+        response = test_client.post("/spaces/test-space/query", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "results" in data
+        assert len(data["results"]) > 0
+        mock_query.assert_called_once()
 
 
 def test_query_space_error(client):
     """Test query endpoint handles errors."""
     test_client, mock_chain = client
-    mock_chain.query.side_effect = Exception("Query failed")
     payload = {
         "query": "Test query",
         "space_name": "test-space"
     }
-    response = test_client.post("/spaces/test-space/query", json=payload)
-    assert response.status_code == 500
+    with patch('src.api.main.rag_chain.query', side_effect=Exception("Query failed")):
+        response = test_client.post("/spaces/test-space/query", json=payload)
+        assert response.status_code == 500
 
 
 def test_upload_document_success(client):
@@ -153,14 +156,14 @@ def test_upload_document_success(client):
             mock_doc.metadata = {}
             mock_loader.load_documents.return_value = [mock_doc]
             
-            with open(temp_path, 'rb') as file:
-                files = {'file': ('test.txt', file, 'text/plain')}
-                response = test_client.post("/api/spaces/test-space/documents", files=files)
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        mock_chain.add_documents.assert_called_once()
+            with patch('src.api.main.rag_chain.add_documents') as mock_add:
+                with open(temp_path, 'rb') as file:
+                    files = {'file': ('test.txt', file, 'text/plain')}
+                    response = test_client.post("/api/spaces/test-space/documents", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert "message" in data
+            mock_add.assert_called_once()
     finally:
         if temp_path.exists():
             temp_path.unlink()
@@ -193,11 +196,12 @@ def test_delete_space_success(client):
     space_dir.mkdir(parents=True, exist_ok=True)
     
     try:
-        response = test_client.delete("/spaces/test-space")
-        assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        mock_chain.vector_store.delete_collection.assert_called_once_with("test-space")
+        with patch('src.api.main.rag_chain.vector_store.delete_collection') as mock_del:
+            response = test_client.delete("/spaces/test-space")
+            assert response.status_code == 200
+            data = response.json()
+            assert "message" in data
+            mock_del.assert_called_once_with("test-space")
     finally:
         if space_dir.exists():
             shutil.rmtree(space_dir, ignore_errors=True)

@@ -33,7 +33,7 @@ class WebScraper:
                 parsed.scheme in ['http', 'https'] and
                 parsed.netloc in self.allowed_domains
             )
-        except:
+        except Exception:
             return False
 
     def get_file_extension(self, url: str) -> Optional[str]:
