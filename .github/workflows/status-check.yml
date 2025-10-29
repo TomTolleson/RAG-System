@@ -88,46 +88,30 @@ jobs:
         if [ -f status_report.json ] && [ -s status_report.json ]; then
           # Validate JSON first
           if python -m json.tool status_report.json > /dev/null 2>&1; then
-            ALERTS=$(python -c "
+            python << 'PYTHON_SCRIPT' > /tmp/parse_status.py
 import json, sys
 try:
     with open('status_report.json', 'r') as f:
         data = json.load(f)
-    print(len(data.get('alerts', [])))
-except Exception as e:
-    print(0)
-    sys.exit(0)
-")
-            CRITICAL=$(python -c "
-import json, sys
-try:
-    with open('status_report.json', 'r') as f:
-        data = json.load(f)
-    print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'CRITICAL'))
+    alerts = len(data.get('alerts', []))
+    critical = sum(1 for a in data.get('alerts', []) if a.get('severity') == 'CRITICAL')
+    high = sum(1 for a in data.get('alerts', []) if a.get('severity') == 'HIGH')
+    failed = sum(1 for w in data.get('workflows', []) if w.get('conclusion') == 'failure')
+    print(f"ALERTS={alerts}")
+    print(f"CRITICAL={critical}")
+    print(f"HIGH={high}")
+    print(f"FAILED={failed}")
 except Exception:
-    print(0)
-    sys.exit(0)
-")
-            HIGH=$(python -c "
-import json, sys
-try:
-    with open('status_report.json', 'r') as f:
-        data = json.load(f)
-    print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'HIGH'))
-except Exception:
-    print(0)
-    sys.exit(0)
-")
-            FAILED_WORKFLOWS=$(python -c "
-import json, sys
-try:
-    with open('status_report.json', 'r') as f:
-        data = json.load(f)
-    print(sum(1 for w in data.get('workflows', []) if w.get('conclusion') == 'failure'))
-except Exception:
-    print(0)
-    sys.exit(0)
-")
+    print("ALERTS=0")
+    print("CRITICAL=0")
+    print("HIGH=0")
+    print("FAILED=0")
+PYTHON_SCRIPT
+            eval $(python /tmp/parse_status.py)
+            ALERTS=${ALERTS:-0}
+            CRITICAL=${CRITICAL:-0}
+            HIGH=${HIGH:-0}
+            FAILED_WORKFLOWS=${FAILED:-0}
           else
             echo "Warning: status_report.json contains invalid JSON"
           fi
