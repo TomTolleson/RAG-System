@@ -41,34 +41,110 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        python check_github_status.py --json > status_report.json || true
+        set +e  # Don't exit on error
+        
+        # Run JSON output, redirect stderr separately to capture errors
+        python check_github_status.py --json > status_report.json 2>status_errors.txt
+        STATUS_CODE=$?
+        
+        # Check if JSON is valid and contains actual JSON (not error messages)
+        if [ -f status_report.json ] && [ -s status_report.json ]; then
+          # Check if file starts with { (valid JSON)
+          FIRST_CHAR=$(head -c 1 status_report.json)
+          if [ "$FIRST_CHAR" != "{" ]; then
+            echo "Warning: status_report.json doesn't contain valid JSON, creating empty report"
+            python -c "import json, datetime; print(json.dumps({'repository':'${{ github.repository }}','timestamp':datetime.datetime.utcnow().isoformat()+'Z','alerts':[],'workflows':[],'repository_info':{},'error':'Script output was not valid JSON'}))" > status_report.json
+          else
+            # Validate JSON syntax
+            if ! python -m json.tool status_report.json > /dev/null 2>&1; then
+              echo "Warning: Invalid JSON syntax in status_report.json, creating empty report"
+              python -c "import json, datetime; print(json.dumps({'repository':'${{ github.repository }}','timestamp':datetime.datetime.utcnow().isoformat()+'Z','alerts':[],'workflows':[],'repository_info':{},'error':'Invalid JSON syntax'}))" > status_report.json
+            fi
+          fi
+        else
+          echo "Warning: status_report.json not created or empty, creating empty report"
+          python -c "import json, datetime; print(json.dumps({'repository':'${{ github.repository }}','timestamp':datetime.datetime.utcnow().isoformat()+'Z','alerts':[],'workflows':[],'repository_info':{},'error':'No report generated'}))" > status_report.json
+        fi
+        
+        # Show errors if any
+        if [ -s status_errors.txt ]; then
+          echo "Script errors/warnings:"
+          cat status_errors.txt
+        fi
+        
+        # Also run human-readable version
+        echo ""
+        echo "=== Human-readable status ==="
         python check_github_status.py || true
     
     - name: Parse status report
       id: parse_status
       run: |
-        if [ -f status_report.json ]; then
-          ALERTS=$(python -c "import json; data=json.load(open('status_report.json')); print(len(data.get('alerts', [])))")
-          CRITICAL=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'CRITICAL'))")
-          HIGH=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'HIGH'))")
-          FAILED_WORKFLOWS=$(python -c "import json; data=json.load(open('status_report.json')); print(sum(1 for w in data.get('workflows', []) if w.get('conclusion') == 'failure'))")
-          
-          echo "total_alerts=$ALERTS" >> $GITHUB_OUTPUT
-          echo "critical_alerts=$CRITICAL" >> $GITHUB_OUTPUT
-          echo "high_alerts=$HIGH" >> $GITHUB_OUTPUT
-          echo "failed_workflows=$FAILED_WORKFLOWS" >> $GITHUB_OUTPUT
-          
-          echo "📊 Status Summary:"
-          echo "   • Total alerts: $ALERTS"
-          echo "   • Critical: $CRITICAL"
-          echo "   • High: $HIGH"
-          echo "   • Failed workflows: $FAILED_WORKFLOWS"
+        ALERTS=0
+        CRITICAL=0
+        HIGH=0
+        FAILED_WORKFLOWS=0
+        
+        if [ -f status_report.json ] && [ -s status_report.json ]; then
+          # Validate JSON first
+          if python -m json.tool status_report.json > /dev/null 2>&1; then
+            ALERTS=$(python -c "
+import json, sys
+try:
+    with open('status_report.json', 'r') as f:
+        data = json.load(f)
+    print(len(data.get('alerts', [])))
+except Exception as e:
+    print(0)
+    sys.exit(0)
+")
+            CRITICAL=$(python -c "
+import json, sys
+try:
+    with open('status_report.json', 'r') as f:
+        data = json.load(f)
+    print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'CRITICAL'))
+except Exception:
+    print(0)
+    sys.exit(0)
+")
+            HIGH=$(python -c "
+import json, sys
+try:
+    with open('status_report.json', 'r') as f:
+        data = json.load(f)
+    print(sum(1 for a in data.get('alerts', []) if a.get('severity') == 'HIGH'))
+except Exception:
+    print(0)
+    sys.exit(0)
+")
+            FAILED_WORKFLOWS=$(python -c "
+import json, sys
+try:
+    with open('status_report.json', 'r') as f:
+        data = json.load(f)
+    print(sum(1 for w in data.get('workflows', []) if w.get('conclusion') == 'failure'))
+except Exception:
+    print(0)
+    sys.exit(0)
+")
+          else
+            echo "Warning: status_report.json contains invalid JSON"
+          fi
         else
-          echo "total_alerts=0" >> $GITHUB_OUTPUT
-          echo "critical_alerts=0" >> $GITHUB_OUTPUT
-          echo "high_alerts=0" >> $GITHUB_OUTPUT
-          echo "failed_workflows=0" >> $GITHUB_OUTPUT
+          echo "Warning: status_report.json not found or empty"
         fi
+        
+        echo "total_alerts=$ALERTS" >> $GITHUB_OUTPUT
+        echo "critical_alerts=$CRITICAL" >> $GITHUB_OUTPUT
+        echo "high_alerts=$HIGH" >> $GITHUB_OUTPUT
+        echo "failed_workflows=$FAILED_WORKFLOWS" >> $GITHUB_OUTPUT
+        
+        echo "📊 Status Summary:"
+        echo "   • Total alerts: $ALERTS"
+        echo "   • Critical: $CRITICAL"
+        echo "   • High: $HIGH"
+        echo "   • Failed workflows: $FAILED_WORKFLOWS"
     
     - name: Upload status report
       uses: actions/upload-artifact@v4

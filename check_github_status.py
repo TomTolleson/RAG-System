@@ -335,35 +335,50 @@ def main():
     repo_info = checker.check_repository_status()
     
     if args.json:
-        output = {
-            "repository": checker.repo,
-            "timestamp": datetime.now().isoformat(),
-            "alerts": [
-                {
-                    "number": a.number,
-                    "severity": a.severity,
-                    "state": a.state,
-                    "dependency": a.dependency,
-                    "description": a.description,
-                    "url": a.url,
-                    "created_at": a.created_at
-                }
-                for a in alerts
-            ],
-            "workflows": [
-                {
-                    "name": w.name,
-                    "status": w.status,
-                    "conclusion": w.conclusion,
-                    "run_number": w.run_number,
-                    "created_at": w.created_at,
-                    "url": w.html_url
-                }
-                for w in workflows
-            ],
-            "repository_info": repo_info
-        }
-        print(json.dumps(output, indent=2))
+        try:
+            output = {
+                "repository": checker.repo,
+                "timestamp": datetime.now().isoformat(),
+                "alerts": [
+                    {
+                        "number": a.number,
+                        "severity": a.severity,
+                        "state": a.state,
+                        "dependency": a.dependency,
+                        "description": a.description,
+                        "url": a.url,
+                        "created_at": a.created_at
+                    }
+                    for a in alerts
+                ],
+                "workflows": [
+                    {
+                        "name": w.name,
+                        "status": w.status,
+                        "conclusion": w.conclusion,
+                        "run_number": w.run_number,
+                        "created_at": w.created_at,
+                        "url": w.html_url
+                    }
+                    for w in workflows
+                ],
+                "repository_info": repo_info
+            }
+            # Print JSON to stdout only, errors go to stderr
+            print(json.dumps(output, indent=2))
+        except Exception as e:
+            # Ensure we always output valid JSON even on error
+            error_output = {
+                "repository": checker.repo,
+                "timestamp": datetime.now().isoformat(),
+                "error": str(e),
+                "alerts": [],
+                "workflows": [],
+                "repository_info": {}
+            }
+            print(json.dumps(error_output, indent=2))
+            sys.stderr.write(f"Error generating report: {e}\n")
+            sys.exit(1)
     else:
         checker.print_summary(alerts, workflows, repo_info)
 
