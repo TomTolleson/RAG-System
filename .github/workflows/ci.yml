@@ -55,7 +55,7 @@ jobs:
         pytest --cov=src --cov-report=xml --cov-report=term-missing tests/ -v
         
     - name: Upload coverage to Codecov
-      if: ${{ secrets.CODECOV_TOKEN }}
+      if: secrets.CODECOV_TOKEN != ''
       continue-on-error: true
       uses: codecov/codecov-action@v5
       with:
