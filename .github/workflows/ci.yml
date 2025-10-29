@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,7 +19,10 @@ jobs:
         python-version: ["3.12"]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -45,17 +53,23 @@ jobs:
         pytest --cov=src --cov-report=xml --cov-report=term-missing tests/
         
     - name: Upload coverage to Codecov
-      if: ${{ secrets.CODECOV_TOKEN }}
+      if: ${{ secrets.CODECOV_TOKEN != '' }}
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
         files: ./coverage.xml
+        flags: unittests
 
   security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -71,5 +85,5 @@ jobs:
       run: bandit -r src/
       
     - name: Run Safety Check
-      run: safety check || echo "Safety check failed but continuing..."
       continue-on-error: true
+      run: safety check
