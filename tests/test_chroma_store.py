@@ -45,3 +45,66 @@ def test_similarity_search_with_documents(chroma_store, mocker):
     assert results[0]["text"] == "Test document 1"
     assert results[0]["metadata"] == {"source": "test1"}
 
+
+def test_get_existing_collections(chroma_store, mocker):
+    """Test get_existing_collections returns list of collections."""
+    mock_client = Mock()
+    mock_collections = ["collection1", "collection2"]
+    mock_client.list_collections.return_value = [Mock(name=c) for c in mock_collections]
+    mocker.patch.object(chroma_store, "_chroma_client", mock_client)
+    
+    collections = chroma_store.get_existing_collections()
+    assert isinstance(collections, list)
+
+
+def test_delete_collection(chroma_store, mocker):
+    """Test delete_collection removes a collection."""
+    mock_client = Mock()
+    mock_client.delete_collection = Mock()
+    mocker.patch.object(chroma_store, "_chroma_client", mock_client)
+    
+    chroma_store.delete_collection("test_collection")
+    mock_client.delete_collection.assert_called_once()
+
+
+def test_add_documents_empty_list(chroma_store):
+    """Test add_documents handles empty document list."""
+    result = chroma_store.add_documents([], "test_collection")
+    assert result is None
+
+
+def test_add_documents_error_handling(chroma_store, sample_documents, mocker):
+    """Test add_documents handles errors gracefully."""
+    mock_collection = Mock()
+    mock_collection.add.side_effect = Exception("Storage error")
+    mock_client = Mock()
+    mock_client.get_or_create_collection.return_value = mock_collection
+    mocker.patch.object(chroma_store, "_chroma_client", mock_client)
+    
+    with pytest.raises(Exception):
+        chroma_store.add_documents(sample_documents, "test_collection")
+
+
+def test_similarity_search_empty_query(chroma_store):
+    """Test similarity_search handles empty query."""
+    results = chroma_store.similarity_search("", "test_collection")
+    assert isinstance(results, list)
+
+
+def test_similarity_search_different_k_values(chroma_store, mocker):
+    """Test similarity_search with different k values."""
+    mock_collection = Mock()
+    mock_collection.query.return_value = {
+        "documents": [["Doc 1", "Doc 2", "Doc 3"]],
+        "metadatas": [[{}, {}, {}]],
+        "distances": [[0.1, 0.2, 0.3]],
+    }
+    mock_client = Mock()
+    mock_client.get_collection.return_value = mock_collection
+    mocker.patch.object(chroma_store, "_chroma_client", mock_client)
+    
+    results_k1 = chroma_store.similarity_search("query", "test_collection", k=1)
+    assert len(results_k1) == 1
+    
+    results_k3 = chroma_store.similarity_search("query", "test_collection", k=3)
+    assert len(results_k3) == 3
