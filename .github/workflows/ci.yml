@@ -32,28 +32,31 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff pytest pytest-cov pytest-asyncio pytest-mock
+        pip install ruff pytest pytest-cov pytest-asyncio pytest-mock httpx
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install mypy types-Flask types-requests
         
     - name: Lint with ruff
+      continue-on-error: true
       run: |
-        ruff check src/ tests/ --output-format=github || true
-        ruff format src/ tests/ --check || true
+        ruff check src/ tests/ --output-format=github
+        ruff format src/ tests/ --check
         
     - name: Type check with mypy
+      continue-on-error: true
       run: |
-        mypy src/ --ignore-missing-imports --exclude="src/scraper/" || true
+        mypy src/ --ignore-missing-imports --exclude="src/scraper/"
         
     - name: Run tests with pytest
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         TESTING: "true"
       run: |
-        pytest --cov=src --cov-report=xml --cov-report=term-missing tests/
+        pytest --cov=src --cov-report=xml --cov-report=term-missing tests/ -v
         
     - name: Upload coverage to Codecov
-      if: ${{ secrets.CODECOV_TOKEN != '' }}
+      if: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
