@@ -31,3 +31,42 @@ def test_openai_embeddings_calls_client(mocker):
     assert mock_openai_cls.called
     assert mock_client.embeddings.create.call_count >= 3
 
+
+def test_openai_embeddings_call_error_handling(mocker):
+    """Test error handling in __call__ method."""
+    mock_client = mocker.Mock()
+    mock_client.embeddings.create.side_effect = Exception("API Error")
+    mocker.patch('src.embeddings.openai_embeddings.OpenAI', return_value=mock_client)
+
+    from src.embeddings.openai_embeddings import OpenAIEmbeddings
+
+    emb = OpenAIEmbeddings(api_key="test-key")
+    with pytest.raises(Exception, match="Failed to generate embeddings: API Error"):
+        emb("hello")
+
+
+def test_openai_embeddings_embed_documents_error_handling(mocker):
+    """Test error handling in embed_documents method."""
+    mock_client = mocker.Mock()
+    mock_client.embeddings.create.side_effect = Exception("API Error")
+    mocker.patch('src.embeddings.openai_embeddings.OpenAI', return_value=mock_client)
+
+    from src.embeddings.openai_embeddings import OpenAIEmbeddings
+
+    emb = OpenAIEmbeddings(api_key="test-key")
+    with pytest.raises(Exception, match="Failed to generate embeddings: API Error"):
+        emb.embed_documents(["test"])
+
+
+def test_openai_embeddings_embed_query_error_handling(mocker):
+    """Test error handling in embed_query method."""
+    mock_client = mocker.Mock()
+    mock_client.embeddings.create.side_effect = Exception("API Error")
+    mocker.patch('src.embeddings.openai_embeddings.OpenAI', return_value=mock_client)
+
+    from src.embeddings.openai_embeddings import OpenAIEmbeddings
+
+    emb = OpenAIEmbeddings(api_key="test-key")
+    with pytest.raises(Exception, match="Failed to generate query embedding: API Error"):
+        emb.embed_query("test")
+
